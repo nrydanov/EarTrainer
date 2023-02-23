@@ -1,5 +1,7 @@
 package frontend
 
+import com.typesafe.scalalogging.Logger
+
 import java.awt.{Color, Dimension, Graphics, Graphics2D, GridLayout}
 import javax.swing.JPanel
 
@@ -10,12 +12,54 @@ class PianoRoll(x_left: Int, y_bottom: Int, width: Int, lowest_pitch: Int, highe
   private val cellHeight = 20
   private val numRows = number_of_notes
   private val numCols = width / cellWidth
+  private var current_col = 1
+  private var lastClicked : Cell = _
+
+  private val logger = Logger("logger")
 
   private def createCells(): Unit = {
     for (row <- 0 until numRows; col <- 0 until numCols) {
-      val cell = new Cell(row, col, cellWidth, cellHeight)
+      val cell = new Cell(col, row, cellWidth, cellHeight)
       this.add(cell)
     }
+  }
+
+  def correct(pitch: Int): Unit = {
+
+    lastClicked.markAsSuccessful(pitch)
+
+    current_col += 1
+  }
+
+  def failed(pitch: Int): Unit = {
+
+    lastClicked.markAsFailed(pitch)
+
+    current_col += 1
+  }
+
+  def getAnswer: Option[Int] = {
+    val components = getComponents
+
+    for (c <- components) {
+      c match {
+        case cell: Cell =>
+          val pitch = highest_pitch - cell.getRow
+          if (cell.clicked) {
+            if (cell.getCol == current_col) {
+              lastClicked = cell
+              return Option[Int](pitch)
+            }
+            else {
+              logger.info(s"${cell.getCol}, $current_col")
+            }
+            cell.clicked = false
+          }
+        case _ =>
+      }
+    }
+
+    Option.empty
   }
 
   this.setLayout(new GridLayout(numRows, numCols))
