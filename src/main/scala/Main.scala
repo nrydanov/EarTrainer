@@ -21,7 +21,7 @@ object Main {
 
     f.setSize(1280, 720)
 
-    val pr = new PianoRoll(0, f.getY, f.getWidth, 21, 127)
+    val pr = new PianoRoll(0, f.getY, f.getWidth, 40, 100)
 
     val sp = new JScrollPane(pr)
 

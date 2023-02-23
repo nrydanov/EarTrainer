@@ -1,6 +1,6 @@
 package frontend
 
-import java.awt.{Color, Dimension, Graphics, Graphics2D}
+import java.awt.{Color, Dimension, Graphics, Graphics2D, GridLayout}
 import javax.swing.JPanel
 
 class PianoRoll(x_left: Int, y_bottom: Int, width: Int, lowest_pitch: Int, highest_pitch: Int) extends JPanel {
@@ -11,13 +11,23 @@ class PianoRoll(x_left: Int, y_bottom: Int, width: Int, lowest_pitch: Int, highe
   private val numRows = number_of_notes
   private val numCols = width / cellWidth
 
+  private def createCells(): Unit = {
+    for (row <- 0 until numRows; col <- 0 until numCols) {
+      val cell = new Cell(row, col, cellWidth, cellHeight)
+      this.add(cell)
+    }
+  }
+
+  this.setLayout(new GridLayout(numRows, numCols))
   this.setPreferredSize(new Dimension(width, number_of_notes * cellHeight))
+  createCells()
 
-  private def convertIntToNote(value: Int): String = {
+  private def convertIntToNote(pitch: Int): String = {
 
-    val octave = (value / 12) - 1
+    val reversed = highest_pitch - pitch
+    val octave = (reversed / 12) - 1
     val noteNames = Array("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
-    val noteName = noteNames(value % 12)
+    val noteName = noteNames(reversed % 12)
 
     s"$noteName$octave"
   }
@@ -30,15 +40,9 @@ class PianoRoll(x_left: Int, y_bottom: Int, width: Int, lowest_pitch: Int, highe
     g2d.setColor(Color.WHITE)
     g2d.fillRect(x_left, y_bottom, getWidth, getHeight)
 
-    g2d.setColor(Color.LIGHT_GRAY)
-    for (row <- 0 until numRows; col <- 0 until numCols) {
-      g2d.drawRect(col * cellWidth, row * cellHeight, cellWidth, cellHeight)
-      if (col == 0) {
-        val noteString = convertIntToNote(highest_pitch - row)
-        g2d.setColor(Color.BLACK)
-        g2d.drawString(noteString, col * cellWidth, row * cellHeight)
-        g2d.setColor(Color.LIGHT_GRAY)
-      }
+    g2d.setColor(Color.BLACK)
+    for (row <- 0 until numRows) {
+      g2d.drawString(convertIntToNote(row), 0, row * cellHeight)
     }
   }
 }
