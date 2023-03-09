@@ -1,5 +1,6 @@
 package frontend
 
+import backend.{Client, EarTrainer}
 import com.typesafe.scalalogging.Logger
 
 import java.awt.{Color, Dimension, Graphics, Graphics2D, GridLayout}
@@ -44,7 +45,7 @@ class PianoRoll(width: Int, height: Int,
         case cell: Cell =>
           val pitch = highestPitch - cell.getRow
           if (pitch == expected && cell.getCol == currentCol) {
-            cell.clicked = true
+            cell.state = CellState.CLICKED
             cell.markAsExpected()
           }
       }
@@ -53,20 +54,23 @@ class PianoRoll(width: Int, height: Int,
     currentCol += 1
   }
 
-  def getAnswer: Option[Int] = {
+  def getAnswer(trainer: Client): Option[Int] = {
     val components = getComponents
 
     for (c <- components) {
       c match {
         case cell: Cell =>
           val pitch = highestPitch - cell.getRow
-          if (cell.clicked) {
+          if (cell.state == CellState.CLICKED) {
             if (cell.getCol == currentCol) {
               lastClicked = cell
               return Option[Int](pitch)
             }
             else if (cell.getCol > currentCol)
-              cell.clicked = false
+              cell.state = CellState.NON_CLICKED
+          } else if (cell.state == CellState.RECLICKED) {
+            trainer.playNote(pitch)
+            cell.state = CellState.CLICKED
           }
         case _ =>
       }

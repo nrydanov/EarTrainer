@@ -3,7 +3,7 @@ package backend
 import javax.sound.midi.MidiSystem
 import scala.util.Random
 
-class EarTrainer(config: Configuration) {
+class EarTrainer(config: Configuration) extends Client {
 
   private var currentPitch = config.lowestPitch
   private val synth = MidiSystem.getSynthesizer
@@ -19,7 +19,7 @@ class EarTrainer(config: Configuration) {
     currentPitch
   }
 
-  def generateNextPitch(): Int = {
+  def generateNextPitch : Int = {
 
     val rand = new Random()
     currentPitch = rand.between(config.lowestPitch, config.highestPitch + 1)
