@@ -1,7 +1,8 @@
-import backend.{Configuration, EarTrainer}
+import backend.{Client, Configuration, EarTrainer}
 import com.typesafe.scalalogging.Logger
 import frontend.PianoRoll
 
+import java.awt.event.{KeyEvent, KeyListener}
 import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
 import javax.swing.{JFrame, JScrollPane, ScrollPaneConstants, WindowConstants}
 
@@ -9,8 +10,8 @@ object Main {
 
   private val logger: Logger = Logger("logger")
 
-  private def updateState(pr: PianoRoll, trainer: EarTrainer): Unit = {
-    val code = pr.getAnswer
+  private def updateState(pr: PianoRoll, trainer: Client): Unit = {
+    val code = pr.getAnswer(trainer)
     if (code.nonEmpty) {
       logger.info(s"Front-end returned answer: ${code.get}")
       if (trainer.checkAnswer(code.get)) {
@@ -18,10 +19,10 @@ object Main {
         pr.correct()
       } else {
         logger.info("Answer is incorrect")
-        pr.failed(trainer.getExpectedPitch())
+        pr.failed(trainer.getExpectedPitch)
       }
       trainer.stopNote()
-      trainer.playNote(trainer.generateNextPitch())
+      trainer.playNote(trainer.generateNextPitch)
     }
   }
 
@@ -47,7 +48,24 @@ object Main {
     f.setVisible(true)
 
     val trainer = new EarTrainer(Configuration.getDefaultConfiguration)
-    trainer.playNote(trainer.generateNextPitch())
+    trainer.playNote(trainer.generateNextPitch)
+
+
+    f.addKeyListener(new KeyListener {
+      override def keyTyped(e: KeyEvent): Unit = {
+
+      }
+
+      override def keyPressed(e: KeyEvent): Unit = {
+        if (e.getKeyCode == KeyEvent.VK_SPACE) {
+          trainer.playNote(trainer.getExpectedPitch)
+        }
+      }
+
+      override def keyReleased(e: KeyEvent): Unit = {
+
+      }
+    })
 
     val executor = new ScheduledThreadPoolExecutor(1)
     val task = new Runnable {

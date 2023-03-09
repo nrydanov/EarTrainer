@@ -4,6 +4,9 @@ import java.awt.event.{MouseAdapter, MouseEvent}
 import java.awt.{Color, Dimension, Graphics, Graphics2D}
 import javax.swing.JPanel
 
+enum CellState:
+  case NON_CLICKED, RECLICKED, CLICKED
+
 class Cell(col : Int, row: Int, width: Int, height: Int) extends JPanel {
 
   private var color = Color.LIGHT_GRAY
@@ -19,13 +22,16 @@ class Cell(col : Int, row: Int, width: Int, height: Int) extends JPanel {
   }
 
   this.setPreferredSize(new Dimension(width, height))
-  var clicked = false
+  var state : CellState = CellState.NON_CLICKED
 
   addMouseListener(new MouseAdapter {
     override def mouseClicked(e: MouseEvent): Unit = {
-      clicked = true
-    }
-  })
+      if (state == CellState.NON_CLICKED)
+        state = CellState.CLICKED
+      else if (state == CellState.CLICKED) {
+        state = CellState.RECLICKED
+      }
+    }})
 
   override def paintComponent(g: Graphics): Unit = {
     super.paintComponent(g)
@@ -39,7 +45,7 @@ class Cell(col : Int, row: Int, width: Int, height: Int) extends JPanel {
     }
 
     g2d.setColor(this.color)
-    if (clicked) {
+    if (state == CellState.CLICKED) {
       g2d.fillRect(0, 0, width, height)
     } else {
       g2d.drawRect(0, 0, width, height)
