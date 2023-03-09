@@ -1,18 +1,14 @@
 package frontend
 
-import com.typesafe.scalalogging.Logger
-
 import java.awt.event.{MouseAdapter, MouseEvent}
 import java.awt.{Color, Dimension, Graphics, Graphics2D}
 import javax.swing.JPanel
 
 class Cell(col : Int, row: Int, width: Int, height: Int) extends JPanel {
 
-  private val logger = Logger("logger")
-
   private var color = Color.LIGHT_GRAY
 
-  private var chosenPitch : Int = _
+  var label : String = _
 
   def getCol: Int = {
     col
@@ -23,12 +19,10 @@ class Cell(col : Int, row: Int, width: Int, height: Int) extends JPanel {
   }
 
   this.setPreferredSize(new Dimension(width, height))
-
   var clicked = false
 
   addMouseListener(new MouseAdapter {
     override def mouseClicked(e: MouseEvent): Unit = {
-      logger.info(s"Cell $col, $row got click")
       clicked = true
     }
   })
@@ -38,33 +32,42 @@ class Cell(col : Int, row: Int, width: Int, height: Int) extends JPanel {
 
     val g2d = g.asInstanceOf[Graphics2D]
 
+    g2d.setColor(Color.BLACK)
+
+    if (col == 0) {
+      g2d.drawString(label, 0, height)
+    }
+
     g2d.setColor(this.color)
-    g2d.drawRect(0, 0, width, height)
+    if (clicked) {
+      g2d.fillRect(0, 0, width, height)
+    } else {
+      g2d.drawRect(0, 0, width, height)
+    }
   }
 
-  def memorizePitch(pitch: Int): Unit = {
-    this.chosenPitch = pitch
-  }
-
-  def markAsFailed(pitch: Int): Unit = {
+  def markAsFailed() : Unit = {
     val g2d = getGraphics.asInstanceOf[Graphics2D]
 
     this.color = Color.RED
     g2d.setColor(this.color)
     g2d.fillRect(0, 0, width, height)
-
-    memorizePitch(pitch)
-
   }
 
-  def markAsSuccessful(pitch: Int): Unit = {
+  def markAsSuccessful(): Unit = {
     val g2d = getGraphics.asInstanceOf[Graphics2D]
 
     this.color = Color.GREEN
     g2d.setColor(this.color)
     g2d.fillRect(0, 0, width, height)
+  }
 
-    memorizePitch(pitch)
+  def markAsExpected(): Unit = {
+    val g2d = getGraphics.asInstanceOf[Graphics2D]
+
+    this.color = Color.DARK_GRAY
+    g2d.setColor(this.color)
+    g2d.fillRect(0, 0, width, height)
   }
 
 }

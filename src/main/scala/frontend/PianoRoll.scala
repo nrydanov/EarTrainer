@@ -5,14 +5,16 @@ import com.typesafe.scalalogging.Logger
 import java.awt.{Color, Dimension, Graphics, Graphics2D, GridLayout}
 import javax.swing.JPanel
 
-class PianoRoll(x_left: Int, y_bottom: Int, width: Int, lowest_pitch: Int, highest_pitch: Int) extends JPanel {
+class PianoRoll(width: Int, height: Int,
+                lowestPitch: Int, highestPitch: Int) extends JPanel {
 
-  private val number_of_notes = highest_pitch - lowest_pitch + 1
+  private val numberOfNotes = highestPitch - lowestPitch + 1
   private val cellWidth = 60
-  private val cellHeight = 20
-  private val numRows = number_of_notes
+  private val cellHeight = Integer.max(20, height / (highestPitch - lowestPitch))
+  private val numRows = numberOfNotes
   private val numCols = width / cellWidth
-  private var current_col = 1
+
+  private var currentCol = 1
   private var lastClicked : Cell = _
 
   private val logger = Logger("logger")
@@ -20,22 +22,35 @@ class PianoRoll(x_left: Int, y_bottom: Int, width: Int, lowest_pitch: Int, highe
   private def createCells(): Unit = {
     for (row <- 0 until numRows; col <- 0 until numCols) {
       val cell = new Cell(col, row, cellWidth, cellHeight)
+      if (col == 0) {
+        cell.label = convertIntToNote(row)
+      }
       this.add(cell)
     }
   }
 
-  def correct(pitch: Int): Unit = {
+  def correct(): Unit = {
 
-    lastClicked.markAsSuccessful(pitch)
+    lastClicked.markAsSuccessful()
 
-    current_col += 1
+    currentCol += 1
   }
 
-  def failed(pitch: Int): Unit = {
+  def failed(expected: Int): Unit = {
 
-    lastClicked.markAsFailed(pitch)
+    lastClicked.markAsFailed()
+    for (c <- getComponents) {
+      c match {
+        case cell: Cell =>
+          val pitch = highestPitch - cell.getRow
+          if (pitch == expected && cell.getCol == currentCol) {
+            cell.clicked = true
+            cell.markAsExpected()
+          }
+      }
+    }
 
-    current_col += 1
+    currentCol += 1
   }
 
   def getAnswer: Option[Int] = {
@@ -44,16 +59,14 @@ class PianoRoll(x_left: Int, y_bottom: Int, width: Int, lowest_pitch: Int, highe
     for (c <- components) {
       c match {
         case cell: Cell =>
-          val pitch = highest_pitch - cell.getRow
+          val pitch = highestPitch - cell.getRow
           if (cell.clicked) {
-            if (cell.getCol == current_col) {
+            if (cell.getCol == currentCol) {
               lastClicked = cell
               return Option[Int](pitch)
             }
-            else {
-              logger.info(s"${cell.getCol}, $current_col")
-            }
-            cell.clicked = false
+            else if (cell.getCol > currentCol)
+              cell.clicked = false
           }
         case _ =>
       }
@@ -63,12 +76,12 @@ class PianoRoll(x_left: Int, y_bottom: Int, width: Int, lowest_pitch: Int, highe
   }
 
   this.setLayout(new GridLayout(numRows, numCols))
-  this.setPreferredSize(new Dimension(width, number_of_notes * cellHeight))
+  this.setPreferredSize(new Dimension(width, numberOfNotes * cellHeight))
   createCells()
 
   private def convertIntToNote(pitch: Int): String = {
 
-    val reversed = highest_pitch - pitch
+    val reversed = highestPitch - pitch
     val octave = (reversed / 12) - 1
     val noteNames = Array("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
     val noteName = noteNames(reversed % 12)
@@ -82,11 +95,6 @@ class PianoRoll(x_left: Int, y_bottom: Int, width: Int, lowest_pitch: Int, highe
     val g2d = g.asInstanceOf[Graphics2D]
 
     g2d.setColor(Color.WHITE)
-    g2d.fillRect(x_left, y_bottom, getWidth, getHeight)
-
-    g2d.setColor(Color.BLACK)
-    for (row <- 0 until numRows) {
-      g2d.drawString(convertIntToNote(row), 0, row * cellHeight)
-    }
+    g2d.fillRect(0, 0, getWidth, getHeight)
   }
 }

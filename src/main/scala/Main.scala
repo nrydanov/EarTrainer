@@ -15,10 +15,10 @@ object Main {
       logger.info(s"Front-end returned answer: ${code.get}")
       if (trainer.checkAnswer(code.get)) {
         logger.info("Answer is correct")
-        pr.correct(code.get)
+        pr.correct()
       } else {
         logger.info("Answer is incorrect")
-        pr.failed(code.get)
+        pr.failed(trainer.getExpectedPitch())
       }
       trainer.stopNote()
       trainer.playNote(trainer.generateNextPitch())
@@ -29,32 +29,31 @@ object Main {
 
     val f = new JFrame("Ear trainer")
     System.setProperty("sun.java2d.opengl", "true")
-    val config = Configuration.getDefaultConfiguration()
+    val config = Configuration.getDefaultConfiguration
 
     f.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
-    f.setSize(1280, 720)
+    f.setSize(config.width, config.height)
 
-    val pr = new PianoRoll(0, f.getY, f.getWidth, config.lowest_pitch, config.highest_pitch)
+    val pr = new PianoRoll(f.getWidth, f.getHeight, config.lowestPitch, config.highestPitch)
 
     val sp = new JScrollPane(pr)
+    sp.getViewport.addChangeListener(_ => pr.repaint())
     sp.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS)
     sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS)
     f.getContentPane.add(sp)
 
+    sp.setLocation(120, 0)
+
     f.setVisible(true)
 
-
-
-    val trainer = new EarTrainer(Configuration.getDefaultConfiguration())
-
+    val trainer = new EarTrainer(Configuration.getDefaultConfiguration)
     trainer.playNote(trainer.generateNextPitch())
 
     val executor = new ScheduledThreadPoolExecutor(1)
-
     val task = new Runnable {
       override def run(): Unit = updateState(pr, trainer)
     }
 
-    val _ = executor.scheduleAtFixedRate(task, 0, 50, TimeUnit.MILLISECONDS)
+    val _ = executor.scheduleWithFixedDelay(task, 0, 10, TimeUnit.MILLISECONDS)
   }
 }

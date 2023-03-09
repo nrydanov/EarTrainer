@@ -1,14 +1,17 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
-ThisBuild / scalaVersion := "2.13.10"
+val swingVersion = "19"
+val sl4jVersion = "2.0.6"
+val loggingVersion = "3.9.4"
 
-libraryDependencies += "org.openjfx" % "javafx-swing" % "19"
-libraryDependencies += "com.explodingart" % "jmusic" % "1.6.4"
-libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.10"
-libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
 
+ThisBuild / scalaVersion := "3.0.2"
+
+libraryDependencies += "org.openjfx" % "javafx-swing" % swingVersion
+libraryDependencies += "org.slf4j" % "slf4j-api" % sl4jVersion
+libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % loggingVersion
 
 lazy val root = (project in file("."))
   .settings(
-    name := "UI"
+    name := "EarTrainer"
   )
